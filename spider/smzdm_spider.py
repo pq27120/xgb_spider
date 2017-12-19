@@ -20,7 +20,9 @@ class SMZDM_Spider(object):
             UA
         )
         dcap["takesScreenshot"] = (False)
-        self.driver = webdriver.PhantomJS(executable_path=r"D:\soft\phantomjs-2.1.1-windows\bin\phantomjs.exe", desired_capabilities=dcap, service_args=['--load-images=no'])
+        # self.driver = webdriver.PhantomJS(executable_path=r"D:\soft\phantomjs-2.1.1-windows\bin\phantomjs.exe", desired_capabilities=dcap, service_args=['--load-images=no'])
+        self.driver = webdriver.PhantomJS(executable_path=r"/usr/local/phantomjs", desired_capabilities=dcap,
+                                          service_args=['--load-images=no'])
         self.api_util = rest_util.RestUtil()
 
     def process_smzdm_article(self, url):
