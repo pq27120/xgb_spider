@@ -11,7 +11,7 @@ import rest_util
 
 UA = "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/39.0.2171.95 Safari/537.36"
 
-class MeiYouSpider(object):
+class SMZDM_Spider(object):
     def __init__(self):
         self.base_url = 'http://120.78.132.250:8084/admin_api'
         self.headers = {'content-type': 'application/json;charset=utf8', 'Connection': 'close'}
@@ -23,12 +23,26 @@ class MeiYouSpider(object):
         self.driver = webdriver.PhantomJS(executable_path=r"D:\soft\phantomjs-2.1.1-windows\bin\phantomjs.exe", desired_capabilities=dcap, service_args=['--load-images=no'])
         self.api_util = rest_util.RestUtil()
 
+    def process_smzdm_article(self, url):
+        page_list, page_list1 = self.get_article_list(url)
+        self.process_smzdm_article_detail(page_list)
+        self.process_smzdm_article_detail(page_list1)
+
+    def process_smzdm_article_detail(self, list):
+        for article in list:
+            print article
+            soup = BeautifulSoup(str(article), 'html.parser', from_encoding='utf-8')
+            title = soup.find('div', class_='z-feed-title').find('a').get_text().strip(' \n').encode('utf-8')
+            sub_title = soup.find('div', class_='z-feed-foot-l').find('span').get_text().strip(' \n').encode('utf-8')
+            is_repeat = self.his_repeat(title)
+            if is_repeat is False:
+                conver_image = soup.find('div', class_='z-feed-img').find('img')['src']
+                url = soup.find('div', class_='z-feed-img').find('a')['href']
+                # content = self.get_article_detail(url)
+                content = url.replace('www', 'm')
+                self.api_util.add_new_topic(title, str(content), conver_image, '优惠', '3', sub_title)
+
     def get_article_list(self, url):
-        '''
-        使用phantomjs下载文章
-        :param url: 文章链接
-        :return:
-        '''
         if url is None:
             return None
         else:
@@ -38,18 +52,13 @@ class MeiYouSpider(object):
                 time.sleep(1)
                 html = self.driver.page_source
                 soup = BeautifulSoup(html, 'html.parser', from_encoding='utf-8')
-                page_list = soup.find_all('div', class_="news-item", limit=20)
-                return page_list
+                page_list = soup.find_all('li', class_="z-hor-feed feed-hor rank-item-hot")
+                page_list1 = soup.find_all('li', class_="z-hor-feed feed-hor rank-item")
+                return page_list, page_list1
             except:
                 print(url)
 
-
     def get_article_detail(self, url):
-        '''
-        使用phantomjs下载文章
-        :param url: 文章链接
-        :return:
-        '''
         if url is None:
             return None
         else:
@@ -59,23 +68,10 @@ class MeiYouSpider(object):
                 time.sleep(1)
                 html = self.driver.page_source
                 soup = BeautifulSoup(html, 'html.parser', from_encoding='utf-8')
-                page_detail = soup.find('div', class_="detail")
+                page_detail = soup.find('div', class_="item-box item-preferential")
                 return page_detail
             except:
                 print(url)
-
-    def process_meiyou_article(self, url, tab, parent_id, page_no):
-        for num in page_no:
-            list = self.get_article_list(url + '?parent_id=' + parent_id + '&page_no=' + (num + 1))
-            for article in list:
-                soup = BeautifulSoup(str(article), 'html.parser', from_encoding='utf-8')
-                title = soup.find('div', class_='news-outline').find('a').get_text().strip(' \n').encode('utf-8')
-                is_repeat = self.his_repeat(title)
-                if is_repeat is False:
-                    conver_image = soup.find('div', class_='news-thumb').find('img')['src']
-                    url = soup.find('div', class_='news-thumb').find('a')['href']
-                    content = self.get_article_detail('http://www.meiyou.com' + url)
-                    self.api_util.add_new_topic(title, str(content), conver_image, tab, '2')
 
     def his_repeat(self, title):
         payload = {'title': title}
@@ -83,9 +79,6 @@ class MeiYouSpider(object):
         r = requests.post(url, data=json.dumps(payload), headers=self.headers)
         return r.json()['is_spider']
 
-    def __del__(self):
-        self.driver.quit()
-
 if __name__ == '__main__':
-    meiyou = MeiYouSpider()
-    print meiyou.process_meiyou_article('http://www.meiyou.com/zhishi/beiyun', '怀孕', '4', '6')
+    smzdm = SMZDM_Spider()
+    smzdm.process_smzdm_article('http://search.smzdm.com/?c=home&s=%E6%AF%8D%E5%A9%B4%E7%94%A8%E5%93%81&order=score')
