@@ -11,7 +11,7 @@ class RestUtil(object):
         self.base_url = 'http://120.78.132.250:8084/admin_api'
 
     def add_new_topic(self, title, content, cover_image, tab, channel, sub_title):
-        payload = {'title': title, 'content': content, 'coverImage': cover_image, 'tab': tab, 'channel': channel, 'subTitle': sub_title}
+        payload = {'title': title, 'content': content, 'coverImage': cover_image, 'tab': tab, 'channel': channel, 'subTitle': sub_title, 'pass': 1}
         url = self.base_url + '/spider/addTopic'
         r = requests.post(url, data=json.dumps(payload), headers=self.headers)
         return r.json()['save_result']
