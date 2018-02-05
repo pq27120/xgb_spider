@@ -26,14 +26,16 @@ class SMZDM_Spider(object):
         self.api_util = rest_util.RestUtil()
 
     def process_smzdm_article(self, url):
-        page_list, page_list1 = self.get_article_list(url)
-        self.process_smzdm_article_detail(page_list)
-        self.process_smzdm_article_detail(page_list1)
-        self.driver.quit()
+        try:
+            page_list, page_list1 = self.get_article_list(url)
+            self.process_smzdm_article_detail(page_list)
+            self.process_smzdm_article_detail(page_list1)
+            self.driver.quit()
+        except:
+            self.driver.quit()
 
     def process_smzdm_article_detail(self, list):
         for article in list:
-            print article
             soup = BeautifulSoup(str(article), 'html.parser', from_encoding='utf-8')
             title = soup.find('div', class_='z-feed-title').find('a').get_text().strip(' \n').encode('utf-8')
             sub_title = soup.find('div', class_='z-feed-foot-l').find('span').get_text().strip(' \n').encode('utf-8')
@@ -59,6 +61,7 @@ class SMZDM_Spider(object):
                 page_list1 = soup.find_all('li', class_="z-hor-feed feed-hor rank-item")
                 return page_list, page_list1
             except:
+                self.driver.quit()
                 print(url)
 
     def get_article_detail(self, url):
@@ -74,6 +77,7 @@ class SMZDM_Spider(object):
                 page_detail = soup.find('div', class_="item-box item-preferential")
                 return page_detail
             except:
+                self.driver.quit()
                 print(url)
 
     def his_repeat(self, title):
